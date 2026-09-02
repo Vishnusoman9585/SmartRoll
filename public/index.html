@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SmartRoll — Smart Attendance</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+
+  <header class="topbar">
+    <div class="brand" onclick="showScreen('welcome')">
+      <div class="brand-mark">🎓</div>
+      <span>Smart<span>Roll</span></span>
+    </div>
+    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+  </header>
+
+  <aside id="sidebar" class="sidebar">
+    <button onclick="showScreen('welcome')">🏠 Welcome</button>
+    <button onclick="showScreen('login')">🔐 Student Login</button>
+    <button onclick="showScreen('faculty-login')">👩‍🏫 Faculty Login</button>
+    <button onclick="showScreen('admin-login')">🛡️ Admin Login</button>
+    <button onclick="showScreen('register')">📷 Face Registration</button>
+    <button onclick="showScreen('scan')">🔎 Face Scanning</button>
+    <button onclick="showScreen('student')">👨‍🎓 Student Dashboard</button>
+    <button onclick="showScreen('faculty')">👩‍🏫 Faculty Dashboard</button>
+    <button onclick="showScreen('admin')">⚙️ Admin Dashboard</button>
+    <button onclick="showScreen('report')">📋 Attendance Report</button>
+    <button onclick="logout()">↪ Logout</button>
+  </aside>
+
+  <main class="app">
+
+    <!-- 1. Welcome -->
+    <section id="welcome" class="screen active">
+      <div class="hero glass">
+        <div class="hero-copy">
+          <div class="eyebrow">✦ AI-Powered Attendance System</div>
+          <div class="mini-brand">🎓 SmartRoll</div>
+          <h1>Smart Attendance<br><span>Simplified</span></h1>
+          <p>Real facial recognition attendance system — runs face matching right in your browser, backed by a live API.</p>
+          <div class="actions">
+            <button class="btn primary" onclick="showScreen('register')">Register Face →</button>
+            <button class="btn secondary" onclick="showScreen('login')">Student Login</button>
+          </div>
+          <div class="feature-row">
+            <div>✓ Real camera</div><div>✓ Real face match</div><div>✓ Live reports</div>
+          </div>
+          <div id="apiStatus" class="api-status">Checking API connection…</div>
+        </div>
+        <div class="hero-visual">
+          <div class="hero-glow"></div>
+          <img class="hero-art" src="assets/smartroll-hero.png" alt="SmartRoll 3D student and biometric attendance terminal">
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Login -->
+    <section id="login" class="screen">
+      <div class="auth-card glass">
+        <div class="auth-form">
+          <div class="mini-brand">🎓 SmartRoll</div>
+          <h2>Welcome Back</h2>
+          <p>Login to your account</p>
+          <form id="loginForm" onsubmit="studentLogin(event)">
+            <label>Roll No</label>
+            <input id="studentId" required placeholder="e.g. IT2023001" />
+            <label>Password</label>
+            <input id="studentPassword" type="password" required placeholder="••••••••" />
+            <button class="btn primary full">Login</button>
+          </form>
+          <div id="loginError" class="form-error"></div>
+          <small>No account yet? <a href="#" onclick="showScreen('register');return false;">Register your face</a></small>
+        </div>
+        <div class="auth-3d">
+          <div class="lock">🔒</div>
+          <div class="shield">✓</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Admin Login -->
+    <section id="admin-login" class="screen">
+      <div class="auth-card glass">
+        <div class="auth-form">
+          <div class="mini-brand">🛡️ SmartRoll</div>
+          <h2>Admin Login</h2>
+          <p>Login to access admin panel</p>
+          <form onsubmit="adminLogin(event)">
+            <label>Admin ID</label>
+            <input id="adminId" required placeholder="Admin ID" />
+            <label>Password</label>
+            <input id="adminPassword" type="password" required placeholder="Password" />
+            <button class="btn primary full">Login</button>
+          </form>
+          <div id="adminLoginError" class="form-error"></div>
+          <small>Demo seed account: <b>admin</b> / <b>admin123</b></small>
+        </div>
+        <div class="auth-3d">
+          <div class="admin-icon">👤</div>
+          <div class="gear">⚙</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3b. Faculty Login -->
+    <section id="faculty-login" class="screen">
+      <div class="auth-card glass">
+        <div class="auth-form">
+          <div class="mini-brand">👩‍🏫 SmartRoll</div>
+          <h2>Faculty Login</h2>
+          <p>Login to manage your classes</p>
+          <form onsubmit="facultyLogin(event)">
+            <label>Faculty ID</label>
+            <input id="facultyIdInput" required placeholder="Faculty ID" />
+            <label>Password</label>
+            <input id="facultyPassword" type="password" required placeholder="Password" />
+            <button class="btn primary full">Login</button>
+          </form>
+          <div id="facultyLoginError" class="form-error"></div>
+          <small>Demo seed account: <b>faculty1</b> / <b>faculty123</b></small>
+        </div>
+        <div class="auth-3d">
+          <div class="admin-icon">👩‍🏫</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Registration -->
+    <section id="register" class="screen">
+      <div class="face-card glass">
+        <div class="back" onclick="showScreen('welcome')">← Back</div>
+        <div class="face-info">
+          <div class="mini-brand">🎓 SmartRoll</div>
+          <h2>Face Registration</h2>
+          <p>Fill in your details, look at the camera, then capture your face sample.</p>
+          <input id="regName" placeholder="Full name" />
+          <input id="regRoll" placeholder="Roll No (e.g. IT2023001)" />
+          <input id="regPassword" type="password" placeholder="Choose a password" />
+          <button class="btn primary" onclick="captureFace()">📸 Capture Face &amp; Register</button>
+          <div id="regStatus" class="form-status"></div>
+        </div>
+        <div class="camera">
+          <video id="regVideo" autoplay muted playsinline></video>
+          <canvas id="regOverlay"></canvas>
+          <div class="corners"></div>
+          <div class="camera-label">CAMERA PREVIEW — LIVE</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Scanning -->
+    <section id="scan" class="screen">
+      <div class="scan-card">
+        <div class="scan-head">🎓 SmartRoll <span id="scanStatus">Loading models…</span></div>
+        <p>Select your class, then look at the camera</p>
+        <select id="scanCourseSelect" class="scan-course-select">
+          <option value="">Loading your classes…</option>
+        </select>
+        <div class="scan-face">
+          <video id="scanVideo" autoplay muted playsinline></video>
+          <canvas id="scanOverlay"></canvas>
+          <div class="scan-ring"></div>
+          <div class="scan-line"></div>
+          <div class="scan-progress"><span id="progress"></span></div>
+        </div>
+        <button class="btn primary" onclick="startScan()">Start Scan</button>
+      </div>
+    </section>
+
+    <!-- 6. Confirmation -->
+    <section id="confirm" class="screen">
+      <div class="confirm-card glass">
+        <div class="success">✓</div>
+        <h2 id="confirmHeadline">Attendance Marked!</h2>
+        <p id="confirmSub">Successfully recorded.</p>
+        <div class="person">
+          <div class="avatar">🙂</div>
+          <div><b id="confirmName">—</b><br><small id="confirmRoll">—</small></div>
+        </div>
+        <div class="time">Today · <span id="timeNow"></span> · match confidence <span id="confirmConfidence">—</span></div>
+        <button class="btn primary" onclick="showScreen('student')">Open Dashboard</button>
+      </div>
+    </section>
+
+    <!-- 7. Student Dashboard -->
+    <section id="student" class="screen">
+      <div class="dashboard glass">
+        <aside class="dash-nav">
+          <div class="mini-brand">🎓 SmartRoll</div>
+          <button class="selected">⌂ Dashboard</button>
+          <button onclick="showScreen('scan')">◉ Mark Attendance</button>
+          <button onclick="logout()">↪ Logout</button>
+        </aside>
+        <div class="dash-content">
+          <h2>Hello, <span id="studentName">Student</span> 👋</h2>
+          <p>Here is your attendance overview.</p>
+          <div class="stat-grid">
+            <div class="stat"><small>Roll No</small><strong id="studentRoll" style="font-size:20px">—</strong></div>
+            <div class="stat"><small>Department</small><strong id="studentDept" style="font-size:20px">—</strong></div>
+            <div class="stat"><small>Total Days Present</small><strong class="green" id="studentDaysPresent">0</strong></div>
+          </div>
+          <div class="list-card">
+            <h3>My Courses</h3>
+            <div id="myCoursesList">Loading…</div>
+          </div>
+          <div class="list-card">
+            <h3>Exam Eligibility <small style="font-weight:400;color:var(--muted)">(75% attendance rule)</small></h3>
+            <div id="myEligibilityList">Loading…</div>
+          </div>
+          <div class="list-card">
+            <h3>Enroll in a Course</h3>
+            <div class="enroll-row">
+              <select id="allCoursesSelect"><option value="">Loading courses…</option></select>
+              <button class="btn primary" onclick="enrollInCourse()">Enroll</button>
+            </div>
+            <div id="enrollStatus" class="form-status"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7b. Faculty Dashboard -->
+    <section id="faculty" class="screen">
+      <div class="dashboard glass">
+        <aside class="dash-nav">
+          <div class="mini-brand">👩‍🏫 SmartRoll</div>
+          <button class="selected">⌂ Dashboard</button>
+          <button onclick="showScreen('report')">▤ My Reports</button>
+          <button onclick="logout()">↪ Logout</button>
+        </aside>
+        <div class="dash-content">
+          <h2>Welcome, <span id="facultyName">Faculty</span> 👋</h2>
+          <div class="stat-grid">
+            <div class="stat"><small>My Courses</small><strong id="facultyTotalCourses">0</strong></div>
+            <div class="stat"><small>Total Students</small><strong id="facultyTotalStudents">0</strong></div>
+            <div class="stat"><small>Marked Today</small><strong class="green" id="facultyMarkedToday">0</strong></div>
+          </div>
+          <div class="list-card">
+            <h3>My Courses</h3>
+            <div id="facultyCourseList">Loading…</div>
+          </div>
+          <div class="list-card">
+            <h3>Bulk Enroll Students</h3>
+            <p style="color:var(--muted);font-size:13px;margin-top:-6px">Paste one roll number per line for your class roster. Only students who've already registered their face will be enrolled.</p>
+            <select id="facultyBulkEnrollCourseSelect" style="width:100%;margin-bottom:10px"><option value="">Loading your courses…</option></select>
+            <textarea id="facultyBulkEnrollRollNumbers" rows="5" placeholder="IT2023001&#10;IT2023002&#10;IT2023003" style="width:100%;border:1px solid #dce3ed;border-radius:8px;padding:11px;font-family:inherit;resize:vertical"></textarea>
+            <button class="btn primary" style="margin-top:10px" onclick="bulkEnroll('facultyBulkEnrollCourseSelect','facultyBulkEnrollRollNumbers','facultyBulkEnrollResult')">Enroll List</button>
+            <div id="facultyBulkEnrollResult" class="form-status"></div>
+          </div>
+          <div class="list-card">
+            <h3>Exam Eligibility <small style="font-weight:400;color:var(--muted)">(75% attendance rule)</small></h3>
+            <div class="enroll-row">
+              <select id="facultyEligibilityCourseSelect"><option value="">Loading your courses…</option></select>
+              <button class="btn primary" onclick="loadCourseEligibility('facultyEligibilityCourseSelect','facultyEligibilityResult')">View Eligibility</button>
+            </div>
+            <div id="facultyEligibilityResult" style="margin-top:14px">Pick a course and click View Eligibility.</div>
+          </div>
+          <div class="list-card">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <h3>Live Attendance — Today <span id="liveDot" class="live-dot"></span></h3>
+              <button class="btn secondary" onclick="toggleLiveAttendance()" id="liveToggleBtn">Start Live View</button>
+            </div>
+            <p style="color:var(--muted);font-size:13px;margin-top:-8px">Refreshes every 5 seconds while students scan in at the door.</p>
+            <div id="liveAttendanceList">Click "Start Live View" during class to watch attendance come in.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. Admin -->
+    <section id="admin" class="screen">
+      <div class="dashboard glass">
+        <aside class="dash-nav">
+          <div class="mini-brand">🛡️ SmartRoll</div>
+          <button class="selected">⌂ Dashboard</button>
+          <button onclick="showScreen('report')">▤ Reports</button>
+          <button onclick="logout()">↪ Logout</button>
+        </aside>
+        <div class="dash-content">
+          <h2>Admin Overview</h2>
+          <div class="stat-grid">
+            <div class="stat"><small>Total Students</small><strong id="adminTotalStudents">0</strong></div>
+            <div class="stat"><small>Present Today</small><strong id="adminPresentToday">0</strong></div>
+            <div class="stat"><small>Today's Attendance %</small><strong id="adminAttendancePct">0%</strong></div>
+          </div>
+          <div class="list-card">
+            <h3>Create a Course</h3>
+            <div class="filters">
+              <input id="newCourseCode" placeholder="Course code e.g. CS201" />
+              <input id="newCourseName" placeholder="Course name e.g. Algorithms" />
+              <select id="newCourseFaculty"><option value="">No faculty assigned</option></select>
+              <button class="btn primary" onclick="createCourse()">Create</button>
+            </div>
+            <div id="createCourseStatus" class="form-status"></div>
+          </div>
+          <div class="list-card">
+            <h3>Courses</h3>
+            <div id="adminCourseList">Loading…</div>
+          </div>
+          <div class="list-card">
+            <h3>Bulk Enroll Students</h3>
+            <p style="color:var(--muted);font-size:13px;margin-top:-6px">Paste one roll number per line (or comma-separated). Only students who've already registered their face will be enrolled.</p>
+            <select id="bulkEnrollCourseSelect" style="width:100%;margin-bottom:10px"><option value="">Loading courses…</option></select>
+            <textarea id="bulkEnrollRollNumbers" rows="5" placeholder="IT2023001&#10;IT2023002&#10;IT2023003" style="width:100%;border:1px solid #dce3ed;border-radius:8px;padding:11px;font-family:inherit;resize:vertical"></textarea>
+            <button class="btn primary" style="margin-top:10px" onclick="bulkEnroll('bulkEnrollCourseSelect','bulkEnrollRollNumbers','bulkEnrollResult')">Enroll List</button>
+            <div id="bulkEnrollResult" class="form-status"></div>
+          </div>
+          <div class="list-card">
+            <h3>Exam Eligibility <small style="font-weight:400;color:var(--muted)">(75% attendance rule)</small></h3>
+            <div class="enroll-row">
+              <select id="adminEligibilityCourseSelect"><option value="">Loading courses…</option></select>
+              <button class="btn primary" onclick="loadCourseEligibility('adminEligibilityCourseSelect','adminEligibilityResult')">View Eligibility</button>
+            </div>
+            <div id="adminEligibilityResult" style="margin-top:14px">Pick a course and click View Eligibility.</div>
+          </div>
+          <div class="list-card">
+            <h3>Registered Students</h3>
+            <div id="adminStudentList">Loading…</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. Report -->
+    <section id="report" class="screen">
+      <div class="dashboard glass">
+        <aside class="dash-nav">
+          <div class="mini-brand">🎓 SmartRoll</div>
+          <button onclick="showScreen('admin')">⌂ Dashboard</button>
+          <button class="selected">▤ Reports</button>
+          <button onclick="logout()">↪ Logout</button>
+        </aside>
+        <div class="dash-content">
+          <h2>Attendance Report</h2>
+          <div class="filters">
+            <select id="reportCourseSelect"><option value="">All courses</option></select>
+            <input id="reportStart" type="date" />
+            <input id="reportEnd" type="date" />
+            <button class="btn primary" onclick="generateReport()">Generate</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Roll No.</th><th>Name</th><th>Course</th><th>Date</th><th>Time</th><th>Status</th><th>Confidence</th></tr></thead>
+              <tbody id="reportBody">
+                <tr><td colspan="7">Login as admin or faculty and click Generate to load real records.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- face-api.js: runs face detection + recognition entirely in the browser -->
+  <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+  <script defer src="app.js"></script>
+</body>
+</html>
